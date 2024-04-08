@@ -8,6 +8,8 @@ import Image from "next/image";
 import SignOutButton from "@/components/SignOutButton";
 import FriendRequestsSidebarOption from "@/components/FriendRequestsSidebarOption";
 import { fetchRedis } from "@/helpers/redis";
+import { getFriendsByUserId } from "@/helpers/get-friends-by-user-id";
+import SidebarChatList from "@/components/SidebarChatList";
 
 interface LayoutProps {
   children: ReactNode;
@@ -30,14 +32,16 @@ const sidebarOptions: SidebarOption[] = [
 ];
 
 const Layout = async ({ children }: LayoutProps) => {
-  const sessionData = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions);
 
-  if(!sessionData) notFound()
+  if(!session) notFound()
+
+  const friends = await getFriendsByUserId(session.user.id)
 
   const unseenRequestCount = (
     (await fetchRedis(
       "smembers",
-      `user:${sessionData.user.id}:incoming_friend_requests`
+      `user:${session.user.id}:incoming_friend_requests`
     )) as User[]
   ).length;
 
@@ -48,13 +52,15 @@ const Layout = async ({ children }: LayoutProps) => {
           <Icons.Logo className="h-8 w-auto text-indigo-600" />
         </Link>
 
-        <div className="text-xs font-semibold leading-6 text-gray-400">
+        {friends.length > 0 ? (<div className="text-xs font-semibold leading-6 text-gray-400">
           Your chats
-        </div>
+        </div>) : null}
 
         <nav className="flex flex-1 flex-col">
           <ul role="list" className="flex flex-1 flex-col gap-y-7">
-            <li>{/* chats user has */}</li>
+            <li>
+              <SidebarChatList friends={friends} sessionId={session.user.id}/>
+            </li>
             <li>
               <div className="text-xs font-semibold leading-6 text-gray-600">
                 Overview
@@ -77,15 +83,15 @@ const Layout = async ({ children }: LayoutProps) => {
                     </li>
                   );
                 })}
-              </ul>
-            </li>
-
             <li>
               <FriendRequestsSidebarOption
-                sessionId={sessionData?.user.id}
+                sessionId={session?.user.id}
                 initialUnseenRequestCount={unseenRequestCount}
               />
             </li>
+              </ul>
+            </li>
+
 
             <li className="-mx-6 mt-auto flex items-center">
               <div className="flex flex-1 items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-gray-900">
@@ -94,16 +100,16 @@ const Layout = async ({ children }: LayoutProps) => {
                     fill
                     referrerPolicy="no-referrer"
                     className="rounded-fill"
-                    src={sessionData?.user.image || ""}
+                    src={session?.user.image || ""}
                     alt="Your profile picture"
                   />
                 </div>
 
                 <span className="sr-only">Your profile</span>
                 <div className="flex flex-col">
-                  <span aria-hidden="true">{sessionData?.user.name}</span>
+                  <span aria-hidden="true">{session?.user.name}</span>
                   <span aria-hidden="true" className="text-sm text-zinc-400">
-                    {sessionData?.user.email}
+                    {session?.user.email}
                   </span>
                 </div>
               </div>
