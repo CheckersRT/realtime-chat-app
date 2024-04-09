@@ -8,6 +8,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    console.log("body:")
+
     const { id: idToAdd } = z.object({ id: z.string() }).parse(body);
 
     const session = await getServerSession(authOptions);
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
     await db.sadd(`user:${session.user.id}:friends`, idToAdd);
 
     // add the other person as well
-    await db.sadd(`user:${idToAdd}`, session.user.id);
+    await db.sadd(`user:${idToAdd}:friends`, session.user.id);
 
     // await db.srem(`user:${idToAdd}:incoming_friend_requests`, session.user.id);
 

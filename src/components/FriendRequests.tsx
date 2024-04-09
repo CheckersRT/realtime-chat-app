@@ -20,7 +20,7 @@ const FriendRequests: FC<FriendRequestsProps> = ({
   );
 
   const acceptFriend = async (senderId: string) => {
-    await axios.post("http://localhost:3000/api/friends/accept", { id: senderId });
+    await axios.post("/api/friends/accept", { id: senderId });
 
     setFriendRequests((prev) =>
       prev.filter((request) => request.senderId !== senderId)
@@ -29,7 +29,7 @@ const FriendRequests: FC<FriendRequestsProps> = ({
     router.refresh();
   };
   const denyFriend = async (senderId: string) => {
-    await axios.post("http://localhost:3000/api/friends/deny", { id: senderId });
+    await axios.post("/api/friends/deny", { id: senderId });
 
     setFriendRequests((prev) =>
       prev.filter((request) => request.senderId !== senderId)
