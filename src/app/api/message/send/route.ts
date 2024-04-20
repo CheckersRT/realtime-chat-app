@@ -4,6 +4,8 @@ import { messageValidator } from "@/lib/validations/message";
 import { getServerSession } from "next-auth";
 import { nanoid } from "nanoid";
 import { db } from "@/lib/db";
+import { toPusherKey } from "@/lib/util";
+import { pusherServer } from "@/lib/pusher";
 
 export async function POST(request: Request) {
   try {
@@ -48,7 +50,11 @@ export async function POST(request: Request) {
       timestamp,
     };
 
+    
     const message = messageValidator.parse(messageData);
+    
+    // notify all connect chat room 
+    pusherServer.trigger(toPusherKey(`chat:${chatId}`), "incoming_message", message)
 
     console.log("message: ", message)
 
